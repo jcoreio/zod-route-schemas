@@ -45,5 +45,24 @@ describe(`basic test`, function () {
       success: true,
       data: { organizationId: 22, dashboardId: 'blah' },
     })
+
+    const userOrUsersRoute = new ZodRoute(
+      '/users/:userId?',
+      z.object({
+        userId: z
+          .string()
+          .transform((s) => parseInt(s))
+          .optional(),
+      })
+    )
+    expect(userOrUsersRoute.parse('/users/3')).to.deep.equal({ userId: 3 })
+    expect(userOrUsersRoute.parse('/users')).to.deep.equal({})
+
+    const optionalStaticRoute = new ZodRoute(
+      '/foo/bar?/:baz',
+      z.object({ baz: z.string() })
+    )
+    expect(optionalStaticRoute.parse('/foo/bar/a')).to.deep.equal({ baz: 'a' })
+    expect(optionalStaticRoute.parse('/foo/a')).to.deep.equal({ baz: 'a' })
   })
 })

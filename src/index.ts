@@ -21,7 +21,13 @@ type BindParam<
   : Elem
 
 type RawParams<Path extends string> = {
-  [K in Parts<Path>[number] as K extends `:${infer S}` ? S : never]: string
+  [K in Parts<Path>[number] as K extends `:${string}?`
+    ? never
+    : K extends `:${infer S}`
+    ? S
+    : never]: string
+} & {
+  [K in Parts<Path>[number] as K extends `:${infer S}?` ? S : never]?: string
 }
 
 export type SchemaForPattern<Pattern extends string> = z.ZodType<
@@ -47,10 +53,47 @@ export default class ZodRoute<
     path: string
   ): z.SafeParseReturnType<z.input<Schema>, z.output<Schema>> {
     const parts = path.split(/\//g)
-    if (
-      parts.length !== this.parts.length ||
-      this.parts.find((p, i) => !p.startsWith(':') && parts[i] !== p)
-    ) {
+    let partIndex = 0
+    let patternIndex = 0
+    const input: any = {}
+    let valid = true
+
+    while (partIndex < parts.length) {
+      const part = parts[partIndex]
+      const patternPart = this.parts[patternIndex]
+      if (patternPart == null) {
+        valid = false
+        break
+      }
+      if (patternPart.startsWith(':')) {
+        input[patternPart.replace(/^:|\?$/g, '')] = part
+        partIndex++
+        patternIndex++
+        continue
+      }
+      if (patternPart.endsWith('?')) {
+        if (part === patternPart.substring(0, patternPart.length - 1)) {
+          partIndex++
+        }
+        patternIndex++
+        continue
+      }
+      if (patternPart !== part) {
+        valid = false
+        break
+      }
+      patternIndex++
+      partIndex++
+    }
+    if (valid) {
+      while (patternIndex < this.parts.length) {
+        if (!this.parts[patternIndex++].endsWith('?')) {
+          valid = false
+          break
+        }
+      }
+    }
+    if (!valid) {
       return {
         success: false,
         error: new z.ZodError([
@@ -62,13 +105,7 @@ export default class ZodRoute<
         ]),
       }
     }
-    return this.schema.safeParse(
-      Object.fromEntries(
-        this.parts.flatMap((p, i) =>
-          p.startsWith(':') ? [[p.substring(1), parts[i]]] : []
-        )
-      )
-    )
+    return this.schema.safeParse(input)
   }
 
   parse(path: string): z.output<Schema> {
@@ -78,17 +115,23 @@ export default class ZodRoute<
   }
 
   format(params: z.output<Schema>): BindParams<Pattern, z.output<Schema>> {
-    return this.pattern.replace(/:[^/]+/g, (m) =>
-      String((params as any)[m.substring(1)])
-    ) as any
+    return this.pattern.replace(/:[^/]+/g, (m) => {
+      const value = (params as any)[m.replace(/^:|\?$/g, '')]
+      if (m.endsWith('?') && value == null) return ''
+      return String(value)
+    }) as any
   }
 
   partialFormat<P extends Partial<z.output<Schema>>>(
     params: P
   ): BindParams<Pattern, P> {
-    return this.pattern.replace(/:[^/]+/g, (m) =>
-      m.substring(1) in params ? String((params as any)[m.substring(1)]) : m
-    ) as any
+    return this.pattern.replace(/:[^/]+/g, (m) => {
+      const key = m.replace(/^:|\?$/g, '')
+      if (!(key in params)) return m
+      const value = (params as any)[key]
+      if (m.endsWith('?') && value == null) return m
+      return String(value)
+    }) as any
   }
 
   extend<
