@@ -115,23 +115,33 @@ export default class ZodRoute<
   }
 
   format(params: z.output<Schema>): BindParams<Pattern, z.output<Schema>> {
-    return this.pattern.replace(/:[^/]+/g, (m) => {
-      const value = (params as any)[m.replace(/^:|\?$/g, '')]
-      if (m.endsWith('?') && value == null) return ''
-      return String(value)
-    }) as any
+    return this.parts
+      .flatMap((p) => {
+        if (p.startsWith(':')) {
+          const value = (params as any)[p.replace(/^:|\?$/g, '')]
+          if (p.endsWith('?') && value == null) return []
+          return [String(value)]
+        }
+        return [p.replace(/\?$/, '')]
+      })
+      .join('/') as any
   }
 
   partialFormat<P extends Partial<z.output<Schema>>>(
     params: P
   ): BindParams<Pattern, P> {
-    return this.pattern.replace(/:[^/]+/g, (m) => {
-      const key = m.replace(/^:|\?$/g, '')
-      if (!(key in params)) return m
-      const value = (params as any)[key]
-      if (m.endsWith('?') && value == null) return m
-      return String(value)
-    }) as any
+    return this.parts
+      .flatMap((p) => {
+        if (p.startsWith(':')) {
+          const key = p.replace(/^:|\?$/g, '')
+          if (!(key in params)) return [p]
+          const value = (params as any)[key]
+          if (p.endsWith('?') && value == null) return []
+          return [String(value)]
+        }
+        return [p]
+      })
+      .join('/') as any
   }
 
   extend<
