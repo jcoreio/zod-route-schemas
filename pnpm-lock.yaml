@@ -13,26 +13,29 @@ dependencies:
     version: 3.22.4
 
 devDependencies:
+  '@jcoreio/eslint-plugin-implicit-dependencies':
+    specifier: ^1.0.2
+    version: 1.0.2
   '@jcoreio/toolchain':
-    specifier: ^3.2.2
-    version: 3.2.2
+    specifier: ^3.9.3
+    version: 3.9.3
   '@jcoreio/toolchain-circle':
-    specifier: ^3.2.2
-    version: 3.2.2
+    specifier: ^3.9.3
+    version: 3.9.3
   '@jcoreio/toolchain-esnext':
-    specifier: ^3.2.2
-    version: 3.2.2(@jcoreio/toolchain@3.2.2)
+    specifier: ^3.9.3
+    version: 3.9.3
   '@jcoreio/toolchain-mocha':
-    specifier: ^3.2.2
-    version: 3.2.2(@jcoreio/toolchain@3.2.2)
+    specifier: ^3.9.3
+    version: 3.9.3
   '@jcoreio/toolchain-semantic-release':
-    specifier: ^3.2.2
-    version: 3.2.2(typescript@5.3.3)
+    specifier: ^3.9.3
+    version: 3.9.3(typescript@5.3.3)
   '@jcoreio/toolchain-typescript':
-    specifier: ^3.2.2
-    version: 3.2.2(@babel/core@7.24.0)(@jcoreio/toolchain-esnext@3.2.2)(@jcoreio/toolchain@3.2.2)(eslint@8.57.0)(typescript@5.3.3)
+    specifier: ^3.9.3
+    version: 3.9.3(eslint@8.57.0)(typescript@5.3.3)
   '@types/chai':
-    specifier: ^4.0.0
+    specifier: ^4.3.5
     version: 4.3.12
   '@types/node':
     specifier: ^20.11.22
@@ -44,7 +47,7 @@ devDependencies:
     specifier: ^5.60.0
     version: 5.62.0(eslint@8.57.0)(typescript@5.3.3)
   chai:
-    specifier: ^4.0.0
+    specifier: ^4.3.7
     version: 4.4.1
   eslint:
     specifier: ^8.43.0
@@ -1453,10 +1456,18 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /@jcoreio/toolchain-circle@3.2.2:
-    resolution: {integrity: sha512-naQN+kVHXJSZ5kVyJOgv9ULSDKPpW++bnIPMCFqUFI+lja5Htdo3rpnDwt2C4693oePVwSSsecr6PyWkKwdQfg==}
+  /@jcoreio/eslint-plugin-implicit-dependencies@1.0.2:
+    resolution: {integrity: sha512-OganBFqjZwqFekJzyvzeAf6ohi4HsIlIhG/rRARNkjcAO4vU9oKgeQ4ARBRGocyF1DS/MsqikkKEJUUHcvUHbA==}
+    engines: {node: '>=16'}
     dependencies:
-      '@jcoreio/toolchain': 3.2.2
+      '@babel/runtime': 7.24.0
+      pkg-up: 3.1.0
+    dev: true
+
+  /@jcoreio/toolchain-circle@3.9.3:
+    resolution: {integrity: sha512-wJjFLVqCeNl2ucG6KablEgKHfO0sN9BoBLQLCTo6o3DRtAydWLIgwVarVQ5nNVqGrtLdqXtwci4N/ml334mK1Q==}
+    dependencies:
+      '@jcoreio/toolchain': 3.9.3
       dedent-js: 1.0.1
       open: 8.4.2
     transitivePeerDependencies:
@@ -1464,11 +1475,9 @@ packages:
       - supports-color
     dev: true
 
-  /@jcoreio/toolchain-esnext@3.2.2(@jcoreio/toolchain@3.2.2):
-    resolution: {integrity: sha512-JrKV7//ujEN7gGNBwqgiR1WhP9zeS3P4A1G892tgbBjXxi41833JC/r4whgrsPB7Ih/qBI2IRBMnudEqbOlgFw==}
+  /@jcoreio/toolchain-esnext@3.9.3:
+    resolution: {integrity: sha512-A6PQLddgV55QwZYpZA2+OeTebLf6m7viu38n/yupX7F9YSdbVVjOv6FRpN3jVhfIciTIIZBxV7DPJYs9uW8atQ==}
     hasBin: true
-    peerDependencies:
-      '@jcoreio/toolchain': 3.2.2
     dependencies:
       '@babel/cli': 7.23.9(@babel/core@7.24.0)
       '@babel/core': 7.24.0
@@ -1479,40 +1488,41 @@ packages:
       '@babel/register': 7.23.7(@babel/core@7.24.0)
       '@babel/runtime': 7.24.0
       '@babel/traverse': 7.24.0
-      '@jcoreio/toolchain': 3.2.2
+      '@jcoreio/toolchain': 3.9.3
       babel-parse-wild-code: 2.1.5
       babel-plugin-add-module-exports: 1.0.4
       babel-plugin-istanbul: 6.1.1
+      babel-register-esm: 1.2.5(@babel/core@7.24.0)
       dedent-js: 1.0.1
       eslint: 8.57.0
       fs-extra: 10.1.0
-      glob: 7.2.3
       resolve: 1.22.8
       resolve-bin: 1.0.1
     transitivePeerDependencies:
+      - enquirer
       - supports-color
     dev: true
 
-  /@jcoreio/toolchain-mocha@3.2.2(@jcoreio/toolchain@3.2.2):
-    resolution: {integrity: sha512-JcdDAXOPcYirg5r7n51+CDEzZ0/rXEbi38eb+Kkn0lX/l9xOj1A4yewxmxmbSfmsbYgSbbI3NxtVqnu7hV2xTg==}
+  /@jcoreio/toolchain-mocha@3.9.3:
+    resolution: {integrity: sha512-ArfAfcC6Li+IYdxTpUntRwK7S34aSopyVPG4vYnDgxKYCniiqxoYRfxnjSaRiskD7R72SIj42oqhKBToNzba6A==}
     hasBin: true
-    peerDependencies:
-      '@jcoreio/toolchain': 3.2.2
     dependencies:
-      '@jcoreio/toolchain': 3.2.2
+      '@jcoreio/toolchain': 3.9.3
+      babel-plugin-istanbul: 6.1.1
       dedent-js: 1.0.1
       mocha: 10.3.0
       nyc: 15.1.0
       resolve-bin: 1.0.1
     transitivePeerDependencies:
+      - enquirer
       - supports-color
     dev: true
 
-  /@jcoreio/toolchain-semantic-release@3.2.2(typescript@5.3.3):
-    resolution: {integrity: sha512-nNpaa0UMbv8zMsDUid9C1c1zFaz1jJUWlF0NgTS3zg3JKp7AoO+rAHBlZMp1Bv87b+EvMFvQ8if5ofa7+bNU/Q==}
+  /@jcoreio/toolchain-semantic-release@3.9.3(typescript@5.3.3):
+    resolution: {integrity: sha512-+IBcgGQoyYwwayo/1UJehNd/X+Q0vaSDYs2t/IosbB6N3sz1ufUx4Wy7gppQ2zQcGgbYoQ+HxiGgf4eyhL0KcA==}
     hasBin: true
     dependencies:
-      '@jcoreio/toolchain': 3.2.2
+      '@jcoreio/toolchain': 3.9.3
       '@semantic-release/commit-analyzer': 9.0.2(semantic-release@21.1.2)
       '@semantic-release/github': 8.1.0(semantic-release@21.1.2)
       '@semantic-release/npm': 10.0.6(semantic-release@21.1.2)
@@ -1527,32 +1537,30 @@ packages:
       - typescript
     dev: true
 
-  /@jcoreio/toolchain-typescript@3.2.2(@babel/core@7.24.0)(@jcoreio/toolchain-esnext@3.2.2)(@jcoreio/toolchain@3.2.2)(eslint@8.57.0)(typescript@5.3.3):
-    resolution: {integrity: sha512-gxP8vKW6i4P45yOOz4MKHDIKvQvgFnSJwbv71kyNawBqkgPzVAiVjL0mDCTqResRc1fh6V/hmLA1OLnNTzGfZQ==}
+  /@jcoreio/toolchain-typescript@3.9.3(eslint@8.57.0)(typescript@5.3.3):
+    resolution: {integrity: sha512-24POJ28z81Oe2jTCN43ekp0BFoXuahq2YNOB2+8iypJCR7jSMESk87FlwjK4to6rd7ATOCuk6nGnnFRK9H1iSQ==}
     peerDependencies:
-      '@babel/core': ^7.0.0
-      '@jcoreio/toolchain': 3.2.2
-      '@jcoreio/toolchain-esnext': 3.2.2
-      eslint: ^8.43.0
       typescript: ^5.1.0
     dependencies:
       '@babel/core': 7.24.0
       '@babel/preset-typescript': 7.23.3(@babel/core@7.24.0)
-      '@jcoreio/toolchain': 3.2.2
-      '@jcoreio/toolchain-esnext': 3.2.2(@jcoreio/toolchain@3.2.2)
+      '@jcoreio/toolchain': 3.9.3
+      '@jcoreio/toolchain-esnext': 3.9.3
       '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0)(eslint@8.57.0)(typescript@5.3.3)
       '@typescript-eslint/parser': 5.62.0(eslint@8.57.0)(typescript@5.3.3)
-      eslint: 8.57.0
       json5: 2.2.3
       typescript: 5.3.3
     transitivePeerDependencies:
+      - enquirer
+      - eslint
       - supports-color
     dev: true
 
-  /@jcoreio/toolchain@3.2.2:
-    resolution: {integrity: sha512-l4XDhXuI/JntjGF5mXov8on17ufFd0bRIxkEAZVX5YJx8k3cVTfsRCjNdoppud4yxfp45ugTDpYpYs2NIc/JJQ==}
+  /@jcoreio/toolchain@3.9.3:
+    resolution: {integrity: sha512-lyws2gvpgnfmkhaxxED0H9tEskc3/c+6FGczf1IU2Tc5MOkX9oY5delNL/ruywEAvany2cTe9XBS8c0yaB9ilA==}
     hasBin: true
     dependencies:
+      '@jcoreio/eslint-plugin-implicit-dependencies': 1.0.2
       chalk: 4.1.2
       dedent-js: 1.0.1
       eslint: 8.57.0
@@ -1560,6 +1568,7 @@ packages:
       execa: 5.1.1
       find-up: 5.0.0
       fs-extra: 10.1.0
+      glob: 7.2.3
       json5: 2.2.3
       lint-staged: 12.5.0
       lodash: 4.17.21
@@ -2493,6 +2502,15 @@ packages:
       '@babel/helper-define-polyfill-provider': 0.5.0(@babel/core@7.24.0)
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /babel-register-esm@1.2.5(@babel/core@7.24.0):
+    resolution: {integrity: sha512-WaVd3Rm42kndYnufn8u1SbUUwuCxL2GAQX/7QXUL3w/7PffB+HcXrzmAqk1x01TjhFh/npSZ9Z3MNBc6dDb6Uw==}
+    engines: {node: '>=12.17.0'}
+    peerDependencies:
+      '@babel/core': '*'
+    dependencies:
+      '@babel/core': 7.24.0
     dev: true
 
   /balanced-match@1.0.2:
@@ -5395,6 +5413,13 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       find-up: 4.1.0
+    dev: true
+
+  /pkg-up@3.1.0:
+    resolution: {integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==}
+    engines: {node: '>=8'}
+    dependencies:
+      find-up: 3.0.0
     dev: true
 
   /possible-typed-array-names@1.0.0:

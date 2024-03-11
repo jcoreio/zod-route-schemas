@@ -36,6 +36,21 @@ const optionalStaticRoute = new ZodRoute(
   z.object({ baz: z.string() })
 )
 
+const dateRoute = new ZodRoute(
+  '/events/:startTime',
+  z.object({
+    startTime: z
+      .string()
+      .datetime()
+      .transform((s) => new Date(s)),
+  }),
+  {
+    formatSchema: z.object({
+      startTime: z.date().transform((d) => d.toISOString()),
+    }),
+  }
+)
+
 describe('parse/safeParse', function () {
   const testcases: [
     ZodRoute<any, any>,
@@ -145,6 +160,18 @@ describe('parse/safeParse', function () {
         ['/foo/a', { success: true, data: { baz: 'a' } }],
       ],
     ],
+    [
+      dateRoute,
+      [
+        [
+          '/events/2022-01-06T03:45:00Z',
+          {
+            success: true,
+            data: { startTime: new Date('2022-01-06T03:45:00Z') },
+          },
+        ],
+      ],
+    ],
   ]
 
   for (const [route, inputs] of testcases) {
@@ -186,6 +213,15 @@ describe('format', function () {
       ],
     ],
     [optionalStaticRoute, [[{ baz: 'a' }, '/foo/bar/a']]],
+    [
+      dateRoute,
+      [
+        [
+          { startTime: new Date('2022-01-06T03:45:00Z') },
+          '/events/2022-01-06T03:45:00.000Z',
+        ],
+      ],
+    ],
   ]
 
   for (const [route, inputs] of testcases) {
@@ -227,6 +263,16 @@ describe(`partialFormat`, function () {
       [
         [{ baz: 'a' }, '/foo/bar?/a'],
         [{}, '/foo/bar?/:baz'],
+      ],
+    ],
+    [
+      dateRoute,
+      [
+        [{}, '/events/:startTime'],
+        [
+          { startTime: new Date('Jan 1 2020 CST') },
+          '/events/2020-01-01T06:00:00.000Z',
+        ],
       ],
     ],
   ]
