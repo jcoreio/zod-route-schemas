@@ -127,7 +127,7 @@ export default class ZodRoute<
         break
       }
       if (patternPart.startsWith(':')) {
-        input[patternPart.replace(/^:|\?$/g, '')] = part
+        input[patternPart.replace(/^:|\?$/g, '')] = decodeURIComponent(part)
         partIndex++
         patternIndex++
         continue
@@ -182,7 +182,7 @@ export default class ZodRoute<
         if (p.startsWith(':')) {
           const value = rawParams[p.replace(/^:|\?$/g, '')]
           if (p.endsWith('?') && value == null) return []
-          return [value]
+          return [encodeURIComponent(value)]
         }
         return [p.replace(/\?$/, '')]
       })
@@ -200,7 +200,7 @@ export default class ZodRoute<
           if (!(key in rawParams)) return [p]
           const value = rawParams[key]
           if (p.endsWith('?') && value == null) return []
-          return [value]
+          return [encodeURIComponent(value)]
         }
         return [p]
       })

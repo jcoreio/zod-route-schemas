@@ -164,7 +164,7 @@ describe('parse/safeParse', function () {
       dateRoute,
       [
         [
-          '/events/2022-01-06T03:45:00Z',
+          '/events/2022-01-06T03%3A45%3A00Z',
           {
             success: true,
             data: { startTime: new Date('2022-01-06T03:45:00Z') },
@@ -218,7 +218,7 @@ describe('format', function () {
       [
         [
           { startTime: new Date('2022-01-06T03:45:00Z') },
-          '/events/2022-01-06T03:45:00.000Z',
+          '/events/2022-01-06T03%3A45%3A00.000Z',
         ],
       ],
     ],
@@ -271,7 +271,7 @@ describe(`partialFormat`, function () {
         [{}, '/events/:startTime'],
         [
           { startTime: new Date('Jan 1 2020 CST') },
-          '/events/2020-01-01T06:00:00.000Z',
+          '/events/2020-01-01T06%3A00%3A00.000Z',
         ],
       ],
     ],
