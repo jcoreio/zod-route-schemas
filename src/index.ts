@@ -93,6 +93,7 @@ export default class ZodRoute<
   private parts: string[]
   public readonly formatSchema: FormatSchema
   public readonly partialFormatSchema: PartialFormatSchema
+  public readonly exact: boolean
 
   constructor(
     public readonly pattern: Pattern,
@@ -100,14 +101,17 @@ export default class ZodRoute<
     {
       formatSchema = defaultFormatSchema as any,
       partialFormatSchema = defaultPartialFormatSchema(formatSchema) as any,
+      exact = true,
     }: {
       formatSchema?: FormatSchema
       partialFormatSchema?: PartialFormatSchema
+      exact?: boolean
     } = {}
   ) {
     this.parts = pattern.split(/\//g)
     this.formatSchema = formatSchema
     this.partialFormatSchema = partialFormatSchema
+    this.exact = exact
   }
 
   safeParse(
@@ -123,7 +127,7 @@ export default class ZodRoute<
       const part = parts[partIndex]
       const patternPart = this.parts[patternIndex]
       if (patternPart == null) {
-        valid = false
+        if (this.exact) valid = false
         break
       }
       if (patternPart.startsWith(':')) {

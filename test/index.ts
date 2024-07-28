@@ -13,6 +13,17 @@ const orgRoute = new ZodRoute(
   })
 )
 
+const inexactOrgRoute = new ZodRoute(
+  '/org/:organizationId',
+  z.object({
+    organizationId: z
+      .string()
+      .regex(/^\d+$/)
+      .transform((s) => parseInt(s)),
+  }),
+  { exact: false }
+)
+
 const dashRoute = orgRoute.extend(
   'dashboards/:dashboardId',
   z.object({
@@ -75,6 +86,40 @@ describe('parse/safeParse', function () {
             },
           ]
         ),
+        [
+          '/org/a',
+          {
+            success: false,
+            error: new z.ZodError([
+              {
+                validation: 'regex',
+                code: z.ZodIssueCode.invalid_string,
+                message: `Invalid`,
+                path: ['organizationId'],
+              },
+            ]),
+          },
+        ],
+      ],
+    ],
+    [
+      inexactOrgRoute,
+      [
+        ['/org/22', { success: true, data: { organizationId: 22 } }],
+        ['/org/22/b', { success: true, data: { organizationId: 22 } }],
+        ...['/org'].map((input): [string, z.SafeParseReturnType<any, any>] => [
+          input,
+          {
+            success: false,
+            error: new z.ZodError([
+              {
+                code: z.ZodIssueCode.custom,
+                message: `path doesn't match pattern`,
+                path: [],
+              },
+            ]),
+          },
+        ]),
         [
           '/org/a',
           {
