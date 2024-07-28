@@ -224,9 +224,11 @@ export default class ZodRoute<
       partialFormatSchema: partialFormatSubschema = defaultPartialFormatSchema(
         formatSubschema
       ) as any,
+      exact = true,
     }: {
       formatSchema?: FormatSubschema
       partialFormatSchema?: PartialFormatSubschema
+      exact?: boolean
     } = {}
   ): ZodRoute<
     `${Pattern}/${Subpattern}`,
@@ -243,6 +245,7 @@ export default class ZodRoute<
         partialFormatSchema: this.partialFormatSchema.and(
           partialFormatSubschema
         ),
+        exact,
       }
     )
   }
