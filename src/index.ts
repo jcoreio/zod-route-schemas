@@ -4,22 +4,6 @@ type Parts<Path extends string> = Path extends `${infer Head}/${infer Tail}`
   ? [Head, ...Parts<Tail>]
   : [Path]
 
-type BindParams<
-  Path extends string,
-  Params extends Record<string, any>
-> = Path extends `${infer Head}/${infer Tail}`
-  ? `${BindParam<Head, Params>}/${BindParams<Tail, Params>}`
-  : BindParam<Path, Params>
-
-type BindParam<
-  Elem extends string,
-  Params extends Record<string, any>
-> = Elem extends `:${infer Param}`
-  ? Param extends keyof Params
-    ? Params[Param]
-    : Elem
-  : Elem
-
 type RawParams<Path extends string> = {
   [K in Parts<Path>[number] as K extends `:${string}?`
     ? never
@@ -179,7 +163,7 @@ export default class ZodRoute<
     return result.data
   }
 
-  format(params: z.output<Schema>): BindParams<Pattern, z.output<Schema>> {
+  format(params: z.output<Schema>): string {
     const rawParams: any = this.formatSchema.parse(params)
     return this.parts
       .flatMap((p) => {
@@ -193,9 +177,7 @@ export default class ZodRoute<
       .join('/') as any
   }
 
-  partialFormat<P extends Partial<z.output<Schema>>>(
-    params: P
-  ): BindParams<Pattern, P> {
+  partialFormat<P extends Partial<z.output<Schema>>>(params: P): string {
     const rawParams: any = this.partialFormatSchema.parse(params)
     return this.parts
       .flatMap((p) => {
@@ -232,9 +214,9 @@ export default class ZodRoute<
     } = {}
   ): ZodRoute<
     `${Pattern}/${Subpattern}`,
-    // @ts-expect-error probably impossbile to get this type to work
     z.ZodIntersection<Schema, Subschema>,
     z.ZodIntersection<FormatSchema, FormatSubschema>,
+    // @ts-expect-error probably impossbile to get this type to work
     z.ZodIntersection<PartialFormatSchema, PartialFormatSubschema>
   > {
     return new ZodRoute<any, any, any>(
