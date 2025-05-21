@@ -65,7 +65,7 @@ const dateRoute = new ZodRoute(
 describe('parse/safeParse', function () {
   const testcases: [
     ZodRoute<any, any>,
-    [string, z.SafeParseReturnType<any, any>][]
+    [string, z.SafeParseReturnType<any, any>][],
   ][] = [
     [
       orgRoute,

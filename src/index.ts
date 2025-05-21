@@ -1,15 +1,12 @@
 import z from 'zod'
 
-type Parts<Path extends string> = Path extends `${infer Head}/${infer Tail}`
-  ? [Head, ...Parts<Tail>]
-  : [Path]
+type Parts<Path extends string> =
+  Path extends `${infer Head}/${infer Tail}` ? [Head, ...Parts<Tail>] : [Path]
 
 type RawParams<Path extends string> = {
-  [K in Parts<Path>[number] as K extends `:${string}?`
-    ? never
-    : K extends `:${infer S}`
-    ? S
-    : never]: string
+  [K in Parts<Path>[number] as K extends `:${string}?` ? never
+  : K extends `:${infer S}` ? S
+  : never]: string
 } & {
   [K in Parts<Path>[number] as K extends `:${infer S}?` ? S : never]?: string
 }
@@ -20,13 +17,8 @@ export type SchemaForPattern<Pattern extends string> = z.ZodType<
   { [K in keyof RawParams<Pattern>]: string }
 >
 
-type InvertSchema<Schema extends z.ZodTypeAny> = Schema extends z.ZodType<
-  infer O,
-  any,
-  infer I
->
-  ? z.ZodType<I, any, O>
-  : never
+type InvertSchema<Schema extends z.ZodTypeAny> =
+  Schema extends z.ZodType<infer O, any, infer I> ? z.ZodType<I, any, O> : never
 
 const defaultFormatSchema = z
   .record(
@@ -40,20 +32,16 @@ const defaultFormatSchema = z
     )
   )
 
-type PartialSchema<S extends z.ZodTypeAny> = S extends z.ZodObject<
-  infer T,
-  infer UnknownKeys,
-  infer Catchall
->
-  ? z.ZodObject<
+type PartialSchema<S extends z.ZodTypeAny> =
+  S extends z.ZodObject<infer T, infer UnknownKeys, infer Catchall> ?
+    z.ZodObject<
       {
         [k in keyof T]: z.ZodOptional<T[k]>
       },
       UnknownKeys,
       Catchall
     >
-  : S extends z.ZodLazy<infer T>
-  ? z.ZodLazy<PartialSchema<T>>
+  : S extends z.ZodLazy<infer T> ? z.ZodLazy<PartialSchema<T>>
   : S
 
 function defaultPartialFormatSchema<S extends z.ZodTypeAny>(
@@ -72,7 +60,8 @@ export default class ZodRoute<
   Pattern extends string,
   Schema extends SchemaForPattern<Pattern>,
   FormatSchema extends InvertSchema<Schema> = InvertSchema<Schema>,
-  PartialFormatSchema extends PartialSchema<FormatSchema> = PartialSchema<FormatSchema>
+  PartialFormatSchema extends
+    PartialSchema<FormatSchema> = PartialSchema<FormatSchema>,
 > {
   private parts: string[]
   public readonly formatSchema: FormatSchema
@@ -110,6 +99,7 @@ export default class ZodRoute<
     while (partIndex < parts.length) {
       const part = parts[partIndex]
       const patternPart = this.parts[patternIndex]
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (patternPart == null) {
         if (this.exact) valid = false
         break
@@ -177,7 +167,7 @@ export default class ZodRoute<
       .join('/') as any
   }
 
-  partialFormat<P extends Partial<z.output<Schema>>>(params: P): string {
+  partialFormat(params: Partial<z.output<Schema>>): string {
     const rawParams: any = this.partialFormatSchema.parse(params)
     return this.parts
       .flatMap((p) => {
@@ -197,7 +187,8 @@ export default class ZodRoute<
     Subpattern extends string,
     Subschema extends SchemaForPattern<Subpattern>,
     FormatSubschema extends InvertSchema<Subschema> = InvertSchema<Subschema>,
-    PartialFormatSubschema extends PartialSchema<FormatSubschema> = PartialSchema<FormatSubschema>
+    PartialFormatSubschema extends
+      PartialSchema<FormatSubschema> = PartialSchema<FormatSubschema>,
   >(
     subpattern: Subpattern,
     subschema: Subschema,
