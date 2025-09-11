@@ -235,6 +235,21 @@ describe('parse/safeParse', function () {
             ]),
           },
         ],
+        [
+          '/org//dashboards/blah',
+          {
+            success: false,
+            error: new z.ZodError([
+              {
+                code: z.ZodIssueCode.invalid_type,
+                expected: 'number',
+                received: 'string',
+                path: ['organizationId'],
+                message: `Expected number, received string`,
+              },
+            ]),
+          },
+        ],
       ],
     ],
     [

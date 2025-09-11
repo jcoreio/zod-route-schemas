@@ -116,8 +116,8 @@ export default class ZodRoute<
         let value: unknown = rawValue
         switch (typeHints[key]) {
           case 'number': {
-            const cast = Number(value)
-            if (Number.isFinite(cast)) value = cast
+            const cast = Number(rawValue)
+            if (rawValue.trim() && Number.isFinite(cast)) value = cast
             break
           }
           case 'bigint': {
@@ -125,8 +125,8 @@ export default class ZodRoute<
             break
           }
           case 'boolean': {
-            if (value === 'true') value = true
-            if (value === 'false') value = false
+            if (rawValue === 'true') value = true
+            if (rawValue === 'false') value = false
             break
           }
         }
