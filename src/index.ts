@@ -1,4 +1,6 @@
 import z from 'zod'
+import { TypeHint } from './getTypeHint'
+import { getTypeHints } from './getTypeHints'
 
 type Parts<Path extends string> =
   Path extends `${infer Head}/${infer Tail}` ? [Head, ...Parts<Tail>] : [Path]
@@ -14,7 +16,7 @@ type RawParams<Path extends string> = {
 export type SchemaForPattern<Pattern extends string> = z.ZodType<
   { [K in keyof RawParams<Pattern>]: any },
   any,
-  { [K in keyof RawParams<Pattern>]: string }
+  { [K in keyof RawParams<Pattern>]: string | number | bigint | boolean }
 >
 
 type InvertSchema<Schema extends z.ZodTypeAny> =
@@ -67,6 +69,7 @@ export default class ZodRoute<
   public readonly formatSchema: FormatSchema
   public readonly partialFormatSchema: PartialFormatSchema
   public readonly exact: boolean
+  private typeHints?: { [K in string]?: TypeHint }
 
   constructor(
     public readonly pattern: Pattern,
@@ -90,6 +93,9 @@ export default class ZodRoute<
   safeParse(
     path: string
   ): z.SafeParseReturnType<z.input<Schema>, z.output<Schema>> {
+    const typeHints =
+      this.typeHints || (this.typeHints = getTypeHints(this.schema))
+
     const parts = path.split(/\//g)
     let partIndex = 0
     let patternIndex = 0
@@ -105,7 +111,26 @@ export default class ZodRoute<
         break
       }
       if (patternPart.startsWith(':')) {
-        input[patternPart.replace(/^:|\?$/g, '')] = decodeURIComponent(part)
+        const key = patternPart.replace(/^:|\?$/g, '')
+        const rawValue = decodeURIComponent(part)
+        let value: unknown = rawValue
+        switch (typeHints[key]) {
+          case 'number': {
+            const cast = Number(value)
+            if (Number.isFinite(cast)) value = cast
+            break
+          }
+          case 'bigint': {
+            if (/^\d+$/.test(rawValue)) value = BigInt(rawValue)
+            break
+          }
+          case 'boolean': {
+            if (value === 'true') value = true
+            if (value === 'false') value = false
+            break
+          }
+        }
+        input[key] = value
         partIndex++
         patternIndex++
         continue

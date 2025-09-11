@@ -2,34 +2,27 @@ import z from 'zod'
 import { describe, it } from 'mocha'
 import ZodRoute from '../src/index'
 import { expect } from 'chai'
+import { getTypeHint } from '../src/getTypeHint'
+import { getTypeHints } from '../src/getTypeHints'
 
 const orgRoute = new ZodRoute(
   '/org/:organizationId',
   z.object({
-    organizationId: z
-      .string()
-      .regex(/^\d+$/)
-      .transform((s) => parseInt(s)),
+    organizationId: z.number().int(),
   })
 )
 
 const relativeOrgRoute = new ZodRoute(
   'org/:organizationId',
   z.object({
-    organizationId: z
-      .string()
-      .regex(/^\d+$/)
-      .transform((s) => parseInt(s)),
+    organizationId: z.number().int(),
   })
 )
 
 const inexactOrgRoute = new ZodRoute(
   '/org/:organizationId',
   z.object({
-    organizationId: z
-      .string()
-      .regex(/^\d+$/)
-      .transform((s) => parseInt(s)),
+    organizationId: z.number().int(),
   }),
   { exact: false }
 )
@@ -51,11 +44,7 @@ const relativeDashRoute = relativeOrgRoute.extend(
 const userOrUsersRoute = new ZodRoute(
   '/users/:userId?',
   z.object({
-    userId: z
-      .string()
-      .regex(/^\d+$/)
-      .transform((s) => parseInt(s))
-      .optional(),
+    userId: z.number().int().optional(),
   })
 )
 
@@ -104,15 +93,31 @@ describe('parse/safeParse', function () {
           ]
         ),
         [
+          '/org/1.5',
+          {
+            success: false,
+            error: new z.ZodError([
+              {
+                code: z.ZodIssueCode.invalid_type,
+                expected: 'integer',
+                received: 'float',
+                message: `Expected integer, received float`,
+                path: ['organizationId'],
+              },
+            ]),
+          },
+        ],
+        [
           '/org/a',
           {
             success: false,
             error: new z.ZodError([
               {
-                validation: 'regex',
-                code: z.ZodIssueCode.invalid_string,
-                message: `Invalid`,
+                code: z.ZodIssueCode.invalid_type,
+                expected: 'number',
+                received: 'string',
                 path: ['organizationId'],
+                message: `Expected number, received string`,
               },
             ]),
           },
@@ -144,10 +149,11 @@ describe('parse/safeParse', function () {
             success: false,
             error: new z.ZodError([
               {
-                validation: 'regex',
-                code: z.ZodIssueCode.invalid_string,
-                message: `Invalid`,
+                code: z.ZodIssueCode.invalid_type,
+                expected: 'number',
+                received: 'string',
                 path: ['organizationId'],
+                message: `Expected number, received string`,
               },
             ]),
           },
@@ -178,10 +184,11 @@ describe('parse/safeParse', function () {
             success: false,
             error: new z.ZodError([
               {
-                validation: 'regex',
-                code: z.ZodIssueCode.invalid_string,
-                message: `Invalid`,
+                code: z.ZodIssueCode.invalid_type,
+                expected: 'number',
+                received: 'string',
                 path: ['organizationId'],
+                message: `Expected number, received string`,
               },
             ]),
           },
@@ -219,10 +226,11 @@ describe('parse/safeParse', function () {
             success: false,
             error: new z.ZodError([
               {
-                validation: 'regex',
-                code: z.ZodIssueCode.invalid_string,
-                message: `Invalid`,
+                code: z.ZodIssueCode.invalid_type,
+                expected: 'number',
+                received: 'string',
                 path: ['organizationId'],
+                message: `Expected number, received string`,
               },
             ]),
           },
@@ -260,10 +268,11 @@ describe('parse/safeParse', function () {
             success: false,
             error: new z.ZodError([
               {
-                validation: 'regex',
-                code: z.ZodIssueCode.invalid_string,
-                message: `Invalid`,
+                code: z.ZodIssueCode.invalid_type,
+                expected: 'number',
+                received: 'string',
                 path: ['organizationId'],
+                message: `Expected number, received string`,
               },
             ]),
           },
@@ -281,10 +290,11 @@ describe('parse/safeParse', function () {
             success: false,
             error: new z.ZodError([
               {
-                validation: 'regex',
-                code: z.ZodIssueCode.invalid_string,
-                message: `Invalid`,
+                code: z.ZodIssueCode.invalid_type,
+                expected: 'number',
+                received: 'string',
                 path: ['userId'],
+                message: `Expected number, received string`,
               },
             ]),
           },
@@ -440,4 +450,133 @@ describe(`partialFormat`, function () {
       }
     })
   }
+})
+
+it(`other type hints`, function () {
+  const schema = new ZodRoute(
+    '/a/:bigint',
+    z.object({
+      bigint: z.bigint(),
+    })
+  ).extend(
+    ':boolean',
+    z.object({
+      boolean: z.boolean(),
+    })
+  )
+  expect(schema.safeParse('/a/3/false')).to.deep.equal({
+    success: true,
+    data: { bigint: 3n, boolean: false },
+  })
+  expect(schema.safeParse('/a/2341982883482/true')).to.deep.equal({
+    success: true,
+    data: { bigint: 2341982883482n, boolean: true },
+  })
+  expect(schema.safeParse('/a/234.5/fals')).to.deep.equal({
+    success: false,
+    error: new z.ZodError([
+      {
+        code: z.ZodIssueCode.invalid_type,
+        expected: 'bigint',
+        received: 'string',
+        path: ['bigint'],
+        message: 'Expected bigint, received string',
+      },
+      {
+        code: z.ZodIssueCode.invalid_type,
+        expected: 'boolean',
+        received: 'string',
+        path: ['boolean'],
+        message: 'Expected boolean, received string',
+      },
+    ]),
+  })
+})
+
+it(`getTypeHint`, function () {
+  expect(getTypeHint(z.number())).to.equal('number')
+  expect(getTypeHint(z.nan())).to.equal('number')
+  expect(getTypeHint(z.string())).to.equal('string')
+  expect(getTypeHint(z.bigint())).to.equal('bigint')
+  expect(getTypeHint(z.boolean())).to.equal('boolean')
+  expect(getTypeHint(z.date())).to.equal('date')
+  expect(getTypeHint(z.literal(1))).to.equal('number')
+  expect(getTypeHint(z.literal(1n))).to.equal('bigint')
+  expect(getTypeHint(z.literal('a'))).to.equal('string')
+  expect(getTypeHint(z.literal(true))).to.equal('boolean')
+  expect(getTypeHint(z.literal(null))).to.equal('unknown')
+  expect(getTypeHint(z.union([z.literal(1), z.literal(2)]))).to.equal('number')
+  expect(getTypeHint(z.union([z.literal(1), z.literal('2')]))).to.equal(
+    'unknown'
+  )
+  expect(getTypeHint(z.intersection(z.literal(1), z.number()))).to.equal(
+    'number'
+  )
+  expect(getTypeHint(z.intersection(z.literal(1), z.string()))).to.equal(
+    'unknown'
+  )
+  expect(getTypeHint(z.lazy(() => z.number()))).to.equal('number')
+  expect(getTypeHint(z.enum(['a', 'b']))).to.equal('string')
+  expect(getTypeHint(z.number().transform((n) => String(n)))).to.equal('number')
+  expect(getTypeHint(z.number().optional())).to.equal('number')
+  expect(getTypeHint(z.number().nullable())).to.equal('number')
+  expect(getTypeHint(z.number().default(5))).to.equal('number')
+  expect(getTypeHint(z.number().catch(3))).to.equal('number')
+  expect(getTypeHint(z.number().brand('a'))).to.equal('number')
+  expect(
+    getTypeHint(
+      z
+        .number()
+        .transform((n) => String(n))
+        .pipe(z.string().regex(/^\d+$/))
+    )
+  ).to.equal('number')
+  expect(getTypeHint(z.number().readonly())).to.equal('number')
+})
+
+it(`getTypeHints`, function () {
+  const schema = z.object({ a: z.number(), b: z.string() })
+  const expected = {
+    a: 'number',
+    b: 'string',
+  }
+  expect(getTypeHints(schema)).to.deep.equal(expected)
+  expect(getTypeHints(z.lazy(() => schema))).to.deep.equal(expected)
+  expect(getTypeHints(schema.refine(() => true))).to.deep.equal(expected)
+  expect(getTypeHints(schema.optional())).to.deep.equal(expected)
+  expect(getTypeHints(schema.nullable())).to.deep.equal(expected)
+  expect(getTypeHints(schema.default({ a: 1, b: '2' }))).to.deep.equal(expected)
+  expect(getTypeHints(schema.catch({ a: 1, b: '2' }))).to.deep.equal(expected)
+  expect(getTypeHints(schema.brand('blah'))).to.deep.equal(expected)
+  expect(getTypeHints(schema.pipe(schema))).to.deep.equal(expected)
+  expect(getTypeHints(schema.readonly())).to.deep.equal(expected)
+
+  expect(
+    getTypeHints(
+      z
+        .object({ a: z.number(), b: z.string(), d: z.boolean() })
+        .and(z.object({ a: z.literal(2), b: z.boolean(), c: z.bigint() }))
+    )
+  ).to.deep.equal({
+    a: 'number',
+    c: 'bigint',
+    d: 'boolean',
+  })
+
+  expect(
+    getTypeHints(
+      z.union([
+        z.object({ a: z.number(), b: z.literal('a') }),
+        z.object({ b: z.string(), c: z.boolean() }),
+        z.object({ b: z.string(), c: z.string() }),
+      ])
+    )
+  ).to.deep.equal({
+    a: 'number',
+    b: 'string',
+  })
+
+  expect(getTypeHints(z.record(z.string()))).to.deep.equal({})
+  expect(getTypeHints(z.set(z.string()))).to.deep.equal({})
+  expect(getTypeHints(z.map(z.string(), z.string()))).to.deep.equal({})
 })
