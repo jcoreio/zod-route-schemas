@@ -13,6 +13,16 @@ const orgRoute = new ZodRoute(
   })
 )
 
+const relativeOrgRoute = new ZodRoute(
+  'org/:organizationId',
+  z.object({
+    organizationId: z
+      .string()
+      .regex(/^\d+$/)
+      .transform((s) => parseInt(s)),
+  })
+)
+
 const inexactOrgRoute = new ZodRoute(
   '/org/:organizationId',
   z.object({
@@ -25,6 +35,13 @@ const inexactOrgRoute = new ZodRoute(
 )
 
 const dashRoute = orgRoute.extend(
+  'dashboards/:dashboardId',
+  z.object({
+    dashboardId: z.string(),
+  })
+)
+
+const relativeDashRoute = relativeOrgRoute.extend(
   'dashboards/:dashboardId',
   z.object({
     dashboardId: z.string(),
@@ -88,6 +105,41 @@ describe('parse/safeParse', function () {
         ),
         [
           '/org/a',
+          {
+            success: false,
+            error: new z.ZodError([
+              {
+                validation: 'regex',
+                code: z.ZodIssueCode.invalid_string,
+                message: `Invalid`,
+                path: ['organizationId'],
+              },
+            ]),
+          },
+        ],
+      ],
+    ],
+    [
+      relativeOrgRoute,
+      [
+        ['org/22', { success: true, data: { organizationId: 22 } }],
+        ...['org', 'org/22/b'].map(
+          (input): [string, z.SafeParseReturnType<any, any>] => [
+            input,
+            {
+              success: false,
+              error: new z.ZodError([
+                {
+                  code: z.ZodIssueCode.custom,
+                  message: `path doesn't match pattern`,
+                  path: [],
+                },
+              ]),
+            },
+          ]
+        ),
+        [
+          'org/a',
           {
             success: false,
             error: new z.ZodError([
@@ -178,6 +230,47 @@ describe('parse/safeParse', function () {
       ],
     ],
     [
+      relativeDashRoute,
+      [
+        [
+          'org/22/dashboards/blah',
+          { success: true, data: { organizationId: 22, dashboardId: 'blah' } },
+        ],
+        ...[
+          'org',
+          'org/22/dashboards',
+          'org/22/dashboard/blah',
+          'org/22/dashboards/blah/foo',
+        ].map((input): [string, z.SafeParseReturnType<any, any>] => [
+          input,
+          {
+            success: false,
+            error: new z.ZodError([
+              {
+                code: z.ZodIssueCode.custom,
+                message: `path doesn't match pattern`,
+                path: [],
+              },
+            ]),
+          },
+        ]),
+        [
+          'org/a/dashboards/blah',
+          {
+            success: false,
+            error: new z.ZodError([
+              {
+                validation: 'regex',
+                code: z.ZodIssueCode.invalid_string,
+                message: `Invalid`,
+                path: ['organizationId'],
+              },
+            ]),
+          },
+        ],
+      ],
+    ],
+    [
       userOrUsersRoute,
       [
         ['/users/3', { success: true, data: { userId: 3 } }],
@@ -241,6 +334,7 @@ describe('parse/safeParse', function () {
 describe('format', function () {
   const testcases: [ZodRoute<any, any>, [object, string][]][] = [
     [orgRoute, [[{ organizationId: 22 }, '/org/22']]],
+    [relativeOrgRoute, [[{ organizationId: 22 }, 'org/22']]],
     [
       dashRoute,
       [
@@ -249,6 +343,10 @@ describe('format', function () {
           '/org/35/dashboards/blah',
         ],
       ],
+    ],
+    [
+      relativeDashRoute,
+      [[{ organizationId: 35, dashboardId: 'blah' }, 'org/35/dashboards/blah']],
     ],
     [
       userOrUsersRoute,
@@ -285,6 +383,7 @@ describe('format', function () {
 describe(`partialFormat`, function () {
   const testcases: [ZodRoute<any, any>, [object, string][]][] = [
     [orgRoute, [[{ organizationId: 22 }, '/org/22']]],
+    [relativeOrgRoute, [[{ organizationId: 22 }, 'org/22']]],
     [
       dashRoute,
       [
@@ -294,6 +393,14 @@ describe(`partialFormat`, function () {
           { organizationId: 35, dashboardId: 'blah' },
           '/org/35/dashboards/blah',
         ],
+      ],
+    ],
+    [
+      relativeDashRoute,
+      [
+        [{ dashboardId: 'blah' }, 'org/:organizationId/dashboards/blah'],
+        [{ organizationId: 35 }, 'org/35/dashboards/:dashboardId'],
+        [{ organizationId: 35, dashboardId: 'blah' }, 'org/35/dashboards/blah'],
       ],
     ],
     [
