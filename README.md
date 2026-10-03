@@ -141,3 +141,20 @@ extend<
   z.ZodIntersection<FormatSchema, FormatSubschema>
 >
 ```
+
+## `class ZodRouteParseError`
+
+Error returned by [`ZodRoute.safeParse`](#safeparsepath) or thrown by [`ZodRoute.parse`](#parsepath) if the input
+path is invalid.
+
+### `route: ZodRoute<any, any>`
+
+The `ZodRoute` instance that tried to parse the `path`
+
+### `path: string`
+
+The input path that the `route` tried to parse
+
+### `cause?: ZodError`
+
+The `ZodError`, if the route pattern matched but param parsing failed

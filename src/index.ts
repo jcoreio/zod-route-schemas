@@ -90,9 +90,7 @@ export default class ZodRoute<
     this.exact = exact
   }
 
-  safeParse(
-    path: string
-  ): z.SafeParseReturnType<z.input<Schema>, z.output<Schema>> {
+  safeParse(path: string): ZodRouteSafeParseReturnType<z.output<Schema>> {
     const typeHints =
       this.typeHints || (this.typeHints = getTypeHints(this.schema))
 
@@ -160,16 +158,19 @@ export default class ZodRoute<
     if (!valid) {
       return {
         success: false,
-        error: new z.ZodError([
-          {
-            code: z.ZodIssueCode.custom,
-            message: `path doesn't match pattern`,
-            path: [],
-          },
-        ]),
+        error: new ZodRouteParseError({ route: this, path }),
       }
     }
-    return this.schema.safeParse(input)
+    const result = this.schema.safeParse(input)
+    if (result.success) return result
+    return {
+      success: false,
+      error: new ZodRouteParseError({
+        route: this,
+        path,
+        cause: result.error,
+      }),
+    }
   }
 
   parse(path: string): z.output<Schema> {
@@ -250,3 +251,40 @@ export default class ZodRoute<
 }
 
 export { ZodRoute }
+
+export type ZodRouteSafeParseReturnType<Output> =
+  | { success: true; data: Output; error?: never }
+  | { success: false; error: ZodRouteParseError; data?: never }
+
+/**
+ * Error returned by `ZodRoute.safeParse` or thrown by `ZodRoute` if the input path is invalid.
+ */
+export class ZodRouteParseError extends Error {
+  name = 'ZodRouteParseError'
+  /**
+   * The `ZodRoute` instance that tried to parse the `path`
+   */
+  route: ZodRoute<any, any>
+  /**
+   * The input path that the `route` tried to parse
+   */
+  path: string
+  /**
+   * The `ZodError`, if the route pattern matched by param parsing failed
+   */
+  cause?: z.ZodError
+
+  constructor({
+    route,
+    path,
+    cause,
+  }: {
+    route: ZodRoute<any, any>
+    path: string
+    cause?: z.ZodError
+  }) {
+    super(`Not found: ${path}`, { cause })
+    this.route = route
+    this.path = path
+  }
+}

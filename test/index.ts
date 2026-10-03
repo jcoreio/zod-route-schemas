@@ -1,6 +1,6 @@
 import z from 'zod'
 import { describe, it } from 'mocha'
-import ZodRoute from '../src/index'
+import ZodRoute, { ZodRouteParseError } from '../src/index'
 import { expect } from 'chai'
 import { getTypeHint } from '../src/getTypeHint'
 import { getTypeHints } from '../src/getTypeHints'
@@ -71,7 +71,13 @@ const dateRoute = new ZodRoute(
 describe('parse/safeParse', function () {
   const testcases: [
     ZodRoute<any, any>,
-    [string, z.SafeParseReturnType<any, any>][],
+    [
+      string,
+      (
+        | z.SafeParseReturnType<any, any>
+        | { success: false; error: ZodRouteParseError; data?: never }
+      ),
+    ][],
   ][] = [
     [
       orgRoute,
@@ -339,7 +345,19 @@ describe('parse/safeParse', function () {
 
   for (const [route, inputs] of testcases) {
     describe(`${route.pattern}`, function () {
-      for (const [input, expected] of inputs) {
+      for (const [input, _expected] of inputs) {
+        const expected =
+          _expected.success ? _expected
+          : _expected.error instanceof z.ZodError ?
+            ({
+              success: false,
+              error: new ZodRouteParseError({
+                route,
+                path: input,
+                cause: _expected.error,
+              }),
+            } as const)
+          : _expected
         it(`${JSON.stringify(input)} -> ${JSON.stringify(
           expected
         )}`, function () {
@@ -489,22 +507,26 @@ it(`other type hints`, function () {
   })
   expect(schema.safeParse('/a/234.5/fals')).to.deep.equal({
     success: false,
-    error: new z.ZodError([
-      {
-        code: z.ZodIssueCode.invalid_type,
-        expected: 'bigint',
-        received: 'string',
-        path: ['bigint'],
-        message: 'Expected bigint, received string',
-      },
-      {
-        code: z.ZodIssueCode.invalid_type,
-        expected: 'boolean',
-        received: 'string',
-        path: ['boolean'],
-        message: 'Expected boolean, received string',
-      },
-    ]),
+    error: new ZodRouteParseError({
+      route: schema,
+      path: '/a/234.5/fals',
+      cause: new z.ZodError([
+        {
+          code: z.ZodIssueCode.invalid_type,
+          expected: 'bigint',
+          received: 'string',
+          path: ['bigint'],
+          message: 'Expected bigint, received string',
+        },
+        {
+          code: z.ZodIssueCode.invalid_type,
+          expected: 'boolean',
+          received: 'string',
+          path: ['boolean'],
+          message: 'Expected boolean, received string',
+        },
+      ]),
+    }),
   })
 })
 
