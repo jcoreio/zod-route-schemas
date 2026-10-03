@@ -16,12 +16,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@jcoreio/toolchain": "^6.0.0",
-    "@jcoreio/toolchain-circle": "^6.0.0",
-    "@jcoreio/toolchain-esnext": "^6.0.0",
-    "@jcoreio/toolchain-mocha": "^6.0.0",
-    "@jcoreio/toolchain-semantic-release": "^6.0.0",
-    "@jcoreio/toolchain-typescript": "^6.0.0",
+    "@jcoreio/toolchain": "^6.0.1",
+    "@jcoreio/toolchain-circle": "^6.0.1",
+    "@jcoreio/toolchain-esnext": "^6.0.1",
+    "@jcoreio/toolchain-mocha": "^6.0.1",
+    "@jcoreio/toolchain-semantic-release": "^6.0.1",
+    "@jcoreio/toolchain-typescript": "^6.0.1",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.11.22",
@@ -61,6 +61,6 @@
     "zod": "^3.22.4"
   },
   "@jcoreio/toolchain": {
-    "migratedVersion": "6.0.0"
+    "migratedVersion": "6.0.1"
   }
 }
