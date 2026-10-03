@@ -189,7 +189,7 @@ export default class ZodRoute<
         }
         return [p.replace(/\?$/, '')]
       })
-      .join('/') as any
+      .join('/')
   }
 
   partialFormat(params: Partial<z.output<Schema>>): string {
@@ -205,7 +205,7 @@ export default class ZodRoute<
         }
         return [p]
       })
-      .join('/') as any
+      .join('/')
   }
 
   extend<

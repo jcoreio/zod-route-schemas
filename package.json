@@ -2,6 +2,10 @@
   "name": "zod-route-schemas",
   "version": "0.0.0-development",
   "description": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jcoreio/zod-route-schemas.git"
+  },
   "scripts": {
     "tc": "toolchain",
     "toolchain": "toolchain",
@@ -12,12 +16,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@jcoreio/toolchain": "^5.5.1",
-    "@jcoreio/toolchain-circle": "^5.5.1",
-    "@jcoreio/toolchain-esnext": "^5.5.1",
-    "@jcoreio/toolchain-mocha": "^5.5.1",
-    "@jcoreio/toolchain-semantic-release": "^5.5.1",
-    "@jcoreio/toolchain-typescript": "^5.5.1",
+    "@jcoreio/toolchain": "^6.0.0",
+    "@jcoreio/toolchain-circle": "^6.0.0",
+    "@jcoreio/toolchain-esnext": "^6.0.0",
+    "@jcoreio/toolchain-mocha": "^6.0.0",
+    "@jcoreio/toolchain-semantic-release": "^6.0.0",
+    "@jcoreio/toolchain-typescript": "^6.0.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.11.22",
@@ -57,6 +61,6 @@
     "zod": "^3.22.4"
   },
   "@jcoreio/toolchain": {
-    "migratedVersion": "5.5.1"
+    "migratedVersion": "6.0.0"
   }
 }
