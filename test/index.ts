@@ -69,32 +69,25 @@ const dateRoute = new ZodRoute(
 )
 
 describe('parse/safeParse', function () {
-  const testcases: [
-    ZodRoute<any, any>,
-    [
-      string,
-      (
-        | z.SafeParseReturnType<any, any>
-        | { success: false; error: ZodRouteParseError; data?: never }
-      ),
-    ][],
-  ][] = [
+  type Expected =
+    | z.SafeParseReturnType<any, any>
+    | { success: false; error: ZodRouteParseError; data?: never }
+  type InputExpected = [string, Expected]
+
+  const testcases: [ZodRoute<any, any>, InputExpected[]][] = [
     [
       orgRoute,
       [
         ['/org/22', { success: true, data: { organizationId: 22 } }],
         ...['/org', '/org/22/b'].map(
-          (input): [string, z.SafeParseReturnType<any, any>] => [
+          (input): InputExpected => [
             input,
             {
               success: false,
-              error: new z.ZodError([
-                {
-                  code: z.ZodIssueCode.custom,
-                  message: `path doesn't match pattern`,
-                  path: [],
-                },
-              ]),
+              error: new ZodRouteParseError({
+                path: input,
+                route: orgRoute,
+              }),
             },
           ]
         ),
@@ -135,17 +128,14 @@ describe('parse/safeParse', function () {
       [
         ['org/22', { success: true, data: { organizationId: 22 } }],
         ...['org', 'org/22/b'].map(
-          (input): [string, z.SafeParseReturnType<any, any>] => [
+          (input): InputExpected => [
             input,
             {
               success: false,
-              error: new z.ZodError([
-                {
-                  code: z.ZodIssueCode.custom,
-                  message: `path doesn't match pattern`,
-                  path: [],
-                },
-              ]),
+              error: new ZodRouteParseError({
+                path: input,
+                route: relativeOrgRoute,
+              }),
             },
           ]
         ),
@@ -171,19 +161,18 @@ describe('parse/safeParse', function () {
       [
         ['/org/22', { success: true, data: { organizationId: 22 } }],
         ['/org/22/b', { success: true, data: { organizationId: 22 } }],
-        ...['/org'].map((input): [string, z.SafeParseReturnType<any, any>] => [
-          input,
-          {
-            success: false,
-            error: new z.ZodError([
-              {
-                code: z.ZodIssueCode.custom,
-                message: `path doesn't match pattern`,
-                path: [],
-              },
-            ]),
-          },
-        ]),
+        ...['/org'].map(
+          (input): InputExpected => [
+            input,
+            {
+              success: false,
+              error: new ZodRouteParseError({
+                path: input,
+                route: inexactOrgRoute,
+              }),
+            },
+          ]
+        ),
         [
           '/org/a',
           {
@@ -213,19 +202,18 @@ describe('parse/safeParse', function () {
           '/org/22/dashboards',
           'org/22/dashboard/blah',
           'org/22/dashboards/blah/foo',
-        ].map((input): [string, z.SafeParseReturnType<any, any>] => [
-          input,
-          {
-            success: false,
-            error: new z.ZodError([
-              {
-                code: z.ZodIssueCode.custom,
-                message: `path doesn't match pattern`,
-                path: [],
-              },
-            ]),
-          },
-        ]),
+        ].map(
+          (input): InputExpected => [
+            input,
+            {
+              success: false,
+              error: new ZodRouteParseError({
+                path: input,
+                route: dashRoute,
+              }),
+            },
+          ]
+        ),
         [
           '/org/a/dashboards/blah',
           {
@@ -270,19 +258,18 @@ describe('parse/safeParse', function () {
           'org/22/dashboards',
           'org/22/dashboard/blah',
           'org/22/dashboards/blah/foo',
-        ].map((input): [string, z.SafeParseReturnType<any, any>] => [
-          input,
-          {
-            success: false,
-            error: new z.ZodError([
-              {
-                code: z.ZodIssueCode.custom,
-                message: `path doesn't match pattern`,
-                path: [],
-              },
-            ]),
-          },
-        ]),
+        ].map(
+          (input): InputExpected => [
+            input,
+            {
+              success: false,
+              error: new ZodRouteParseError({
+                path: input,
+                route: relativeDashRoute,
+              }),
+            },
+          ]
+        ),
         [
           'org/a/dashboards/blah',
           {
@@ -362,12 +349,13 @@ describe('parse/safeParse', function () {
           expected
         )}`, function () {
           expect(route.safeParse(input)).to.deep.equal(expected)
-          if (expected.success)
+          if (expected.success) {
             expect(route.parse(input)).to.deep.equal(expected.data)
-          else
+          } else {
             expect(() => route.parse(input))
-              .to.throw(Error)
+              .to.throw(ZodRouteParseError)
               .that.deep.equal(expected.error)
+          }
         })
       }
     })

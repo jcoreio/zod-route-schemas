@@ -1,6 +1,7 @@
 import z from 'zod'
 import { TypeHint } from './getTypeHint'
 import { getTypeHints } from './getTypeHints'
+import { invert } from 'zod-invertible'
 
 type Parts<Path extends string> =
   Path extends `${infer Head}/${infer Tail}` ? [Head, ...Parts<Tail>] : [Path]
@@ -21,18 +22,6 @@ export type SchemaForPattern<Pattern extends string> = z.ZodType<
 
 type InvertSchema<Schema extends z.ZodTypeAny> =
   Schema extends z.ZodType<infer O, any, infer I> ? z.ZodType<I, any, O> : never
-
-const defaultFormatSchema = z
-  .record(
-    z.union([z.string(), z.number(), z.boolean(), z.null(), z.undefined()])
-  )
-  .transform((o) =>
-    Object.fromEntries(
-      Object.entries(o).flatMap(([key, value]) =>
-        value === undefined ? [] : [[key, String(value)]]
-      )
-    )
-  )
 
 type PartialSchema<S extends z.ZodTypeAny> =
   S extends z.ZodObject<infer T, infer UnknownKeys, infer Catchall> ?
@@ -62,12 +51,10 @@ export default class ZodRoute<
   Pattern extends string,
   Schema extends SchemaForPattern<Pattern>,
   FormatSchema extends InvertSchema<Schema> = InvertSchema<Schema>,
-  PartialFormatSchema extends
-    PartialSchema<FormatSchema> = PartialSchema<FormatSchema>,
 > {
   private parts: string[]
   public readonly formatSchema: FormatSchema
-  public readonly partialFormatSchema: PartialFormatSchema
+  public readonly partialFormatSchema: PartialSchema<FormatSchema>
   public readonly exact: boolean
   private typeHints?: { [K in string]?: TypeHint }
 
@@ -75,12 +62,12 @@ export default class ZodRoute<
     public readonly pattern: Pattern,
     public readonly schema: Schema,
     {
-      formatSchema = defaultFormatSchema as any,
-      partialFormatSchema = defaultPartialFormatSchema(formatSchema) as any,
+      formatSchema = invert(schema) as any,
+      partialFormatSchema = defaultPartialFormatSchema(formatSchema),
       exact = true,
     }: {
       formatSchema?: FormatSchema
-      partialFormatSchema?: PartialFormatSchema
+      partialFormatSchema?: PartialSchema<FormatSchema>
       exact?: boolean
     } = {}
   ) {
@@ -213,28 +200,24 @@ export default class ZodRoute<
     Subpattern extends string,
     Subschema extends SchemaForPattern<Subpattern>,
     FormatSubschema extends InvertSchema<Subschema> = InvertSchema<Subschema>,
-    PartialFormatSubschema extends
-      PartialSchema<FormatSubschema> = PartialSchema<FormatSubschema>,
   >(
     subpattern: Subpattern,
     subschema: Subschema,
     {
-      formatSchema: formatSubschema = defaultFormatSchema as any,
+      formatSchema: formatSubschema = invert(subschema) as any,
       partialFormatSchema: partialFormatSubschema = defaultPartialFormatSchema(
         formatSubschema
       ) as any,
       exact = true,
     }: {
       formatSchema?: FormatSubschema
-      partialFormatSchema?: PartialFormatSubschema
+      partialFormatSchema?: PartialSchema<FormatSchema>
       exact?: boolean
     } = {}
   ): ZodRoute<
     `${Pattern}/${Subpattern}`,
     z.ZodIntersection<Schema, Subschema>,
-    z.ZodIntersection<FormatSchema, FormatSubschema>,
-    // @ts-expect-error probably impossbile to get this type to work
-    z.ZodIntersection<PartialFormatSchema, PartialFormatSubschema>
+    z.ZodIntersection<FormatSchema, FormatSubschema>
   > {
     return new ZodRoute<any, any, any>(
       `${this.pattern}/${subpattern}`,
@@ -283,8 +266,9 @@ export class ZodRouteParseError extends Error {
     path: string
     cause?: z.ZodError
   }) {
-    super(`Not found: ${path}`, { cause })
+    super(cause ? `Invalid path: ${path}` : `Not found: ${path}`, { cause })
     this.route = route
     this.path = path
+    this.cause = cause
   }
 }
