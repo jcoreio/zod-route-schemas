@@ -7,9 +7,7 @@ export function getTypeHints(schema: z.ZodTypeAny): {
   switch (schema._def.typeName) {
     case z.ZodFirstPartyTypeKind.ZodObject: {
       const { shape } = schema as z.ZodObject<z.ZodRawShape>
-      const hints: {
-        [K in string]?: TypeHint
-      } = {}
+      const hints: { [K in string]?: TypeHint } = {}
       for (const key in shape) {
         const value = shape[key]
         hints[key] = getTypeHint(value)
@@ -26,9 +24,7 @@ export function getTypeHints(schema: z.ZodTypeAny): {
           >
       const optionHints = options.map((o) => getTypeHints(o))
       const keys = new Set(optionHints.flatMap((o) => Object.keys(o)))
-      const hints: {
-        [K in string]?: TypeHint
-      } = {}
+      const hints: { [K in string]?: TypeHint } = {}
       for (const key of keys) {
         const hintsForKey = new Set(optionHints.flatMap((h) => h[key] || []))
         if (hintsForKey.size === 1) hints[key] = [...hintsForKey][0]
@@ -47,8 +43,8 @@ export function getTypeHints(schema: z.ZodTypeAny): {
         ...Object.keys(rightHints),
       ])) {
         if (
-          !(key in leftHints) ||
-          !(key in rightHints) ||
+          !Object.prototype.hasOwnProperty.call(leftHints, key) ||
+          !Object.prototype.hasOwnProperty.call(rightHints, key) ||
           leftHints[key] === rightHints[key]
         ) {
           hints[key] = leftHints[key] || rightHints[key]

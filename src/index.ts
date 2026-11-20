@@ -25,13 +25,7 @@ type InvertSchema<Schema extends z.ZodTypeAny> =
 
 type PartialSchema<S extends z.ZodTypeAny> =
   S extends z.ZodObject<infer T, infer UnknownKeys, infer Catchall> ?
-    z.ZodObject<
-      {
-        [k in keyof T]: z.ZodOptional<T[k]>
-      },
-      UnknownKeys,
-      Catchall
-    >
+    z.ZodObject<{ [k in keyof T]: z.ZodOptional<T[k]> }, UnknownKeys, Catchall>
   : S extends z.ZodLazy<infer T> ? z.ZodLazy<PartialSchema<T>>
   : S
 
@@ -145,7 +139,10 @@ export default class ZodRoute<
     if (!valid) {
       return {
         success: false,
-        error: new ZodRouteParseError({ route: this, path }),
+        error: new ZodRouteParseError({
+          route: this,
+          path,
+        }),
       }
     }
     const result = this.schema.safeParse(input)
@@ -186,7 +183,7 @@ export default class ZodRoute<
       .flatMap((p) => {
         if (p.startsWith(':')) {
           const key = p.replace(/^:|\?$/g, '')
-          if (!(key in rawParams)) return [p]
+          if (!Object.prototype.hasOwnProperty.call(rawParams, key)) return [p]
           const value = rawParams[key]
           if (p.endsWith('?') && value == null) return []
           return [encodeURIComponent(value)]
@@ -236,8 +233,16 @@ export default class ZodRoute<
 export { ZodRoute }
 
 export type ZodRouteSafeParseReturnType<Output> =
-  | { success: true; data: Output; error?: never }
-  | { success: false; error: ZodRouteParseError; data?: never }
+  | {
+      success: true
+      data: Output
+      error?: never
+    }
+  | {
+      success: false
+      error: ZodRouteParseError
+      data?: never
+    }
 
 /**
  * Error returned by `ZodRoute.safeParse` or thrown by `ZodRoute` if the input path is invalid.
@@ -266,7 +271,9 @@ export class ZodRouteParseError extends Error {
     path: string
     cause?: z.ZodError
   }) {
-    super(cause ? `Invalid path: ${path}` : `Not found: ${path}`, { cause })
+    super(cause ? `Invalid path: ${path}` : `Not found: ${path}`, {
+      cause,
+    })
     this.route = route
     this.path = path
     this.cause = cause
